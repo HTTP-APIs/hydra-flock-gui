@@ -39,7 +39,6 @@ footer {
   float: right;
   position: relative;
   left: -50%;
-  /* or right 50% */
   text-align: left;
 }
 
