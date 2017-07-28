@@ -21,8 +21,10 @@ toastr.options = {
   "hideMethod": "fadeOut"
 }
 
-var central_server_url = "http://localhost:8080/";
+var central_server_url = "http://localhost:8080";
 var center, map, path, message;
+var active_drones = [];
+var drone_index;
 
 function change_in_latitude(distance) {
   // Given a distance north, return the change in latitude.
@@ -38,12 +40,12 @@ function change_in_longitude(latitude, distance) {
 
 }
 
-function get_central_controller_location() {
-  // Get coordinates of the central controller.
+function get_central_controller_location_and_initialize() {
+  // Get coordinates of the central controller and then inintialize the gui.
 
   $.ajax({
     type: "GET",
-    url: central_server_url + "api/Location",
+    url: central_server_url + "/api/Location",
     success: function(data) {
       // console.log("coordinates", data["Location"].split(",").map(Number))
 
@@ -68,7 +70,7 @@ function update_central_controller_location(location) {
 
   $.ajax({
     type: "POST",
-    url: central_server_url + "api/Location",
+    url: central_server_url + "/api/Location",
     data: JSON.stringify({
       "Location": location.toString(),
       "@type": "Location"
@@ -85,11 +87,36 @@ function update_central_controller_location(location) {
   });
 }
 
-function submit_message(message){
+function delete_drone(drone) {
+  $.ajax({
+    type: "DELETE",
+    url: central_server_url + drone["@id"],
+    success: function() {
+      toastr["success"]("Faulty drone with id "+ drone["@id"]+ "successfully removed from Central controller.");
+      //Update the active_drones list.
+      update_drones_list();
+    },
+    error: function() {
+      toastr["error"]("Error deleting faulty drone with id "+ drone["@id"]+ " from central controller");
+      drone_index = active_drones.indexOf(drone);
+      if (drone_index > -1) {
+        active_drones.splice(drone_index, 1);
+        update_drones_panel(active_drones);
+        toastr["info"]("Faulty drone with id "+ drone["@id"]+ " removed from local drone list.");
+
+      }
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+}
+
+function submit_message(message) {
   //Submit message to the central controller.
   $.ajax({
     type: "PUT",
-    url: central_server_url + "api/MessageCollection",
+    url: central_server_url + "/api/MessageCollection",
     data: JSON.stringify({
       "Message": message.toString(),
       "@type": "Message"
@@ -107,6 +134,60 @@ function submit_message(message){
 
 }
 
+function update_drones_panel(drone_list) {
+  // Update the drones panel in gui
+  $("#drone-list").empty();
+  for (i = 0; i < drone_list.length; i++) {
+    var drone_id = drone_list[i]["@id"].match(/([^\/]*)\/*$/)[1];
+    $("#drone-list").append('<li id="drone' + drone_id + '"><a href="#">Drone ' + drone_id + '</a></li>');
+  }
+}
+
+function update_drones_list() {
+  // Get active drone list from the central controller.
+  $.ajax({
+    type: "GET",
+    url: central_server_url + "/api/DroneCollection",
+    success: function(data) {
+      console.log("Active dronelist", data["members"]);
+      active_drones = data["members"];
+      update_drones_panel(active_drones);
+      toastr["success"]("Drone list successfully updated!");
+    },
+    error: function() {
+      toastr["error"]("Error while getting list of drones from central server! Please try hitting Refresh.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+
+
+}
+
+function get_and_check_drone(drone) {
+  // Get drone details from the central server, if drone is not valid delete that drone from the central server.
+  // Get active drone list from the central controller.
+  $.ajax({
+    type: "GET",
+    url: central_server_url + drone["@id"],
+    success: function(data) {
+      if (!("DroneState" in data)) {
+        // console.log(data);
+        delete_drone(drone);
+
+      }
+      // toastr["success"]("Drone list successfully updated!");
+    },
+    error: function() {
+      // toastr["error"]("Error while getting list of drones from central server! Please try hitting Refresh.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+
+}
 
 function convert_direction_to_north_or_west(distance_moved, direction) {
   // Convert East and South direction to North and East.
@@ -230,8 +311,8 @@ function handle_controller_marker_drag(event) {
   add_controller_marker(map, new_controller_location);
   map.fitZoom();
 
-
 }
+
 
 
 
@@ -261,22 +342,39 @@ function initialize_gui(center) {
   map.fitZoom();
 }
 
-get_central_controller_location();
+get_central_controller_location_and_initialize();
+update_drones_list();
 
-$("#message-submit-btn").click(function(){
+$("#message-submit-btn").click(function() {
   message = $("#message").val();
-  if (message.length >0){
+  if (message.length > 0) {
     submit_message(message);
     $("#message").val("");
   }
 });
 
 $("#message-form").keypress(function(e) {
-    if(e.which == 13) {
-      message = $("#message").val();
-      if (message.length >0){
-        submit_message(message);
-        $("#message").val("");
-      }
+  if (e.which == 13) {
+    message = $("#message").val();
+    if (message.length > 0) {
+      submit_message(message);
+      $("#message").val("");
     }
+  }
 });
+
+$("#refresh-drone-list").click(function() {
+  update_drones_list();
+});
+
+function update_simulation() {
+  // console.log(active_drones);
+  if (active_drones.length > 0) {
+    for (i = 0; i < active_drones.length; i++) {
+      get_and_check_drone(active_drones[i]);
+    }
+  }
+  setTimeout(update_simulation, 1500);
+}
+
+update_simulation();
