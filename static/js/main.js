@@ -239,13 +239,16 @@ function get_new_coordinates(old_coordinates, distance_moved, direction) {
   return gen_new_coordinates_from_change_in_coordinates(old_coordinates, change_in_coordinates)
 }
 
+
 function gen_square_path(controller_coordinates, dimension) {
   // Generate a square path around central controller for area of interest.
   var path = [];
-  path.push(get_new_coordinates(controller_coordinates, dimension, "N"));
-  path.push(get_new_coordinates(controller_coordinates, dimension, "E"));
-  path.push(get_new_coordinates(controller_coordinates, dimension, "S"));
-  path.push(get_new_coordinates(controller_coordinates, dimension, "W"));
+
+
+  path.push(get_new_coordinates(get_new_coordinates(controller_coordinates, dimension, "W"), dimension, "S"));
+  path.push(get_new_coordinates(get_new_coordinates(controller_coordinates, dimension, "W"), dimension, "N"));
+  path.push(get_new_coordinates(get_new_coordinates(controller_coordinates, dimension, "E"), dimension, "N"));
+  path.push(get_new_coordinates(get_new_coordinates(controller_coordinates, dimension, "E"), dimension, "S"));
 
   console.log(path);
   return path;
@@ -309,7 +312,7 @@ function handle_controller_marker_drag(event) {
   add_markers(map, path, "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/3by2white.svg/150px-3by2white.svg.png");
   draw_polygon(map, path);
   add_controller_marker(map, new_controller_location);
-  map.fitZoom();
+  // map.fitZoom();
 
 }
 
@@ -339,7 +342,14 @@ function initialize_gui(center) {
   // Add central controller draggable marker to the map
   add_controller_marker(map, center);
   // fitZoom map
-  map.fitZoom();
+  map.setZoom(12);
+  // map.refresh()
+
+  map.addOverlayMapType({
+    index: 0,
+    tileSize: new google.maps.Size(256, 256),
+    getTile: getTile
+  });
 }
 
 get_central_controller_location_and_initialize();
@@ -362,6 +372,22 @@ $("#message-form").keypress(function(e) {
     }
   }
 });
+
+
+function getTile(coord, zoom, ownerDocument) {
+  var div = ownerDocument.createElement('div');
+  div.innerHTML = coord;
+  div.style.width = this.tileSize.width + 'px';
+  div.style.height = this.tileSize.height + 'px';
+  div.style.fontSize = '10';
+  div.style.fontWeight = 'bolder';
+  div.style.border = 'dotted 1px #aaa';
+  div.style.textAlign = 'center';
+  div.style.lineHeight = this.tileSize.height + 'px';
+  return div;
+};
+
+
 
 $("#refresh-drone-list").click(function() {
   update_drones_list();
