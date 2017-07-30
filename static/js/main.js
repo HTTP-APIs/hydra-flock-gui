@@ -1,8 +1,9 @@
-//var earth_radius = 3960.0
-var earth_radius = 6371.0;
-var degrees_to_radians = Math.PI / 180.0;
-var radians_to_degrees = 180.0 / Math.PI;
+//var earthRadius = 3960.0
+var earthRadius = 6371.0;
+var degreesToRadians = Math.PI / 180.0;
+var radiansToDegrees = 180.0 / Math.PI;
 
+// Toastr plugin configuration
 toastr.options = {
   "closeButton": true,
   "debug": false,
@@ -21,42 +22,118 @@ toastr.options = {
   "hideMethod": "fadeOut"
 }
 
-var central_server_url = "http://localhost:8080";
+var centralControllerUrl = "http://localhost:8080";
+var centralControllerLocationPath = "/api/Location";
+var centralControllerMessageCollectionPath = "/api/MessageCollection";
 var center, map, path, message;
-var active_drones = [];
-var drone_index;
+var activeDrones = [];
+var droneMarkers = [];
 
-function change_in_latitude(distance) {
+
+// Distance conversion related functions
+
+function changeInLatitude(distance) {
   // Given a distance north, return the change in latitude.
-  return (distance / earth_radius) * radians_to_degrees;
+  return (distance / earthRadius) * radiansToDegrees;
 
 }
 
-function change_in_longitude(latitude, distance) {
+
+function changeInLongitude(latitude, distance) {
   // Given a latitude and a distance west, return the change in longitude.
   // Find the radius of a circle around the earth at given latitude.
-  r = earth_radius * Math.cos(latitude * degrees_to_radians);
-  return (distance / r) * radians_to_degrees;
-
+  r = earthRadius * Math.cos(latitude * degreesToRadians);
+  return (distance / r) * radiansToDegrees;
 }
 
-function get_central_controller_location_and_initialize() {
+
+function convertDistanceToNorthOrWest(distanceMoved, direction) {
+  // Convert East and South direction to North and East.
+  if (direction == "S") {
+    distanceMoved = distanceMoved * -1;
+    direction = "N";
+  } else if (direction == "E") {
+    distanceMoved = distanceMoved * -1;
+    direction = "W";
+  }
+  return {
+    "distanceMoved": distanceMoved,
+    "direction": direction
+  }
+}
+
+
+function generateNewCoordinatesFromChangeInCoordinates(oldCoordinates, changeInCoordinates) {
+  // Calculate new coordinates given coordinates(lat,lon) and changeInCoordinates(lat,lon).
+  newLat = oldCoordinates[0] + changeInCoordinates[0];
+  newLon = oldCoordinates[1] + changeInCoordinates[1];
+
+  return [newLat, newLon];
+}
+
+
+function getNewCoordinates(oldCoordinates, distanceMoved, direction) {
+  // Get new coordinates given old coordinates (lat,lon), distance moved in kilometers.
+  // direction of movement [N, S, E, W].
+
+  // Convert directions if needed
+  convertedLocationData = convertDistanceToNorthOrWest(distanceMoved, direction);
+  distanceMoved = convertedLocationData["distanceMoved"];
+  direction = convertedLocationData["direction"];
+
+  if (direction == "N") {
+    latitudeChange = changeInLatitude(distanceMoved);
+    changeInCoordinates = [latitudeChange, 0];
+  } else if (direction == "W") {
+    latitude = oldCoordinates[0];
+    longitudeChange = changeInLongitude(latitude, distanceMoved);
+    changeInCoordinates = [0, longitudeChange];
+  } else {
+
+    throw "Not a valid direction of movement! Please use one of  ['N', 'S', 'E', 'W']";
+  }
+
+  return generateNewCoordinatesFromChangeInCoordinates(oldCoordinates, changeInCoordinates)
+}
+
+
+function genSquarePath(controllerCoordinates, areaOfInterestSquareDimension) {
+  // Generate a square path around central controller for area of interest.
+  var path = [];
+
+  path.push(getNewCoordinates(getNewCoordinates(controllerCoordinates, areaOfInterestSquareDimension, "W"), areaOfInterestSquareDimension, "S"));
+  path.push(getNewCoordinates(getNewCoordinates(controllerCoordinates, areaOfInterestSquareDimension, "W"), areaOfInterestSquareDimension, "N"));
+  path.push(getNewCoordinates(getNewCoordinates(controllerCoordinates, areaOfInterestSquareDimension, "E"), areaOfInterestSquareDimension, "N"));
+  path.push(getNewCoordinates(getNewCoordinates(controllerCoordinates, areaOfInterestSquareDimension, "E"), areaOfInterestSquareDimension, "S"));
+
+  // console.log(path);
+  return path;
+}
+
+
+
+
+//Data fetching related functions.
+
+function getCentralControllerLocationAndInitialise() {
   // Get coordinates of the central controller and then inintialize the gui.
 
   $.ajax({
     type: "GET",
-    url: central_server_url + "/api/Location",
+    url: centralControllerUrl + centralControllerLocationPath,
     success: function(data) {
       // console.log("coordinates", data["Location"].split(",").map(Number))
 
       toastr["success"]("Central Controller Coordinates retrieved successfully!");
+      // Convert fetched location to data to array of coordinates [Lat, Lng]
       center = data["Location"].split(",").map(Number);
-      initialize_gui(center);
+      // Initialise the Map UI with center as center point.
+      initialiseGui(center);
     },
     error: function() {
       toastr["error"]("Error getting Central Controller Coordinates! Using default Coordinates.");
       center = [-10.040397656836609, -55.03373871559225];
-      initialize_gui(center);
+      initialiseGui(center);
     },
     dataType: 'json',
     crossDomain: true,
@@ -65,12 +142,12 @@ function get_central_controller_location_and_initialize() {
 }
 
 
-function update_central_controller_location(location) {
-  // Upate the coordinates of central controller using AJAX post
+function udpateCentralControllerLocation(location) {
+  // Upate the coordinates of central controller using AJAX post request
 
   $.ajax({
     type: "POST",
-    url: central_server_url + "/api/Location",
+    url: centralControllerUrl + centralControllerLocationPath,
     data: JSON.stringify({
       "Location": location.toString(),
       "@type": "Location"
@@ -79,7 +156,7 @@ function update_central_controller_location(location) {
       toastr["success"]("Central Controller location successfully updated! New coordinates are " + location);
     },
     error: function() {
-      toastr["error"]("Error updating the central server coordinates. Please try again!");
+      toastr["error"]("Something went wrong while updating the central controller location!");
     },
     dataType: 'json',
     crossDomain: true,
@@ -87,22 +164,26 @@ function update_central_controller_location(location) {
   });
 }
 
-function delete_drone(drone) {
+
+function deleteDrone(drone) {
+  // Delete a drone from the central controller
+
   $.ajax({
     type: "DELETE",
-    url: central_server_url + drone["@id"],
+    url: centralControllerUrl + drone["@id"],
     success: function() {
-      toastr["success"]("Faulty drone with id "+ drone["@id"]+ "successfully removed from Central controller.");
-      //Update the active_drones list.
-      update_drones_list();
+      toastr["success"]("Drone with id "+ drone["@id"]+ "successfully removed from central controller!");
+      //Update the activeDrones list and generate new markers.
+      getActiveDronesAndGenerateMarkers();
     },
     error: function() {
-      toastr["error"]("Error deleting faulty drone with id "+ drone["@id"]+ " from central controller");
-      drone_index = active_drones.indexOf(drone);
-      if (drone_index > -1) {
-        active_drones.splice(drone_index, 1);
-        update_drones_panel(active_drones);
-        toastr["info"]("Faulty drone with id "+ drone["@id"]+ " removed from local drone list.");
+      toastr["error"]("Error deleting drone with id "+ drone["@id"]+ " from the central controller!");
+      // Remove the drone from activeDrones list
+      droneIndex = activeDrones.indexOf(drone);
+      if (droneIndex > -1) {
+        activeDrones.splice(droneIndex, 1);
+        updateDronesPanel(activeDrones);
+        toastr["info"]("Drone with id "+ drone["@id"]+ " removed from local activeDrones list.");
 
       }
     },
@@ -112,11 +193,12 @@ function delete_drone(drone) {
   });
 }
 
-function submit_message(message) {
-  //Submit message to the central controller.
+
+function submitMessage(message) {
+  //Submit new message to the central controller.
   $.ajax({
     type: "PUT",
-    url: central_server_url + "/api/MessageCollection",
+    url: centralControllerUrl + centralControllerMessageCollectionPath,
     data: JSON.stringify({
       "Message": message.toString(),
       "@type": "Message"
@@ -125,7 +207,7 @@ function submit_message(message) {
       toastr["success"]("Message successfully submitted!");
     },
     error: function() {
-      toastr["error"]("Error submitting message. Please try again!");
+      toastr["error"]("Error submitting message to the central controller. Please try again!");
     },
     dataType: 'json',
     crossDomain: true,
@@ -134,129 +216,89 @@ function submit_message(message) {
 
 }
 
-function update_drones_panel(drone_list) {
-  // Update the drones panel in gui
-  $("#drone-list").empty();
-  for (i = 0; i < drone_list.length; i++) {
-    var drone_id = drone_list[i]["@id"].match(/([^\/]*)\/*$/)[1];
-    $("#drone-list").append('<li id="drone' + drone_id + '"><a href="#">Drone ' + drone_id + '</a></li>');
-  }
-}
 
-function update_drones_list() {
-  // Get active drone list from the central controller.
-  $.ajax({
-    type: "GET",
-    url: central_server_url + "/api/DroneCollection",
-    success: function(data) {
-      console.log("Active dronelist", data["members"]);
-      active_drones = data["members"];
-      update_drones_panel(active_drones);
-      toastr["success"]("Drone list successfully updated!");
-    },
-    error: function() {
-      toastr["error"]("Error while getting list of drones from central server! Please try hitting Refresh.");
-    },
-    dataType: 'json',
-    crossDomain: true,
-    contentType: "application/ld+json",
-  });
-
-
-}
-
-function get_and_check_drone(drone) {
+function getDroneDetailsAndUpdateMarker(drone, marker) {
   // Get drone details from the central server, if drone is not valid delete that drone from the central server.
-  // Get active drone list from the central controller.
+  // Update the drone marker in map UI
+
   $.ajax({
     type: "GET",
-    url: central_server_url + drone["@id"],
+    url: centralControllerUrl + drone["@id"],
     success: function(data) {
-      if (!("DroneState" in data)) {
+      // Check if drone is faulty
+      if (! checkDrone(data)) {
         // console.log(data);
-        delete_drone(drone);
+        deleteDrone(drone);
+      }
+      else{
+        // Extract drone position Coordinates
+        dronePosition = data["DroneState"]["Position"].split(",").map(Number);
+        marker.setPosition({lat: dronePosition[0], lng: dronePosition[1]})
+        console.log("Drone marker position updated!");
 
       }
-      // toastr["success"]("Drone list successfully updated!");
     },
     error: function() {
-      // toastr["error"]("Error while getting list of drones from central server! Please try hitting Refresh.");
+      toastr["error"]("Something wen't wrong while getting drone details! Please try refreshing the page.");
     },
     dataType: 'json',
     crossDomain: true,
     contentType: "application/ld+json",
   });
-
 }
 
-function convert_direction_to_north_or_west(distance_moved, direction) {
-  // Convert East and South direction to North and East.
-  if (direction == "S") {
-    distance_moved = distance_moved * -1;
-    direction = "N";
-  } else if (direction == "E") {
-    distance_moved = distance_moved * -1;
-    direction = "W";
+function getActiveDronesAndGenerateMarkers() {
+  // Get active drone list from the central controller.
+  $.ajax({
+    type: "GET",
+    url: centralControllerUrl + "/api/DroneCollection",
+    success: function(data) {
+      // Update the activeDrones global list
+      activeDrones = data["members"];
+      // Reset droneMarkers list
+      droneMarkers = [];
+      // Add the markers to the droneMarkers list.
+      for(i = 0; i< data["members"].length;i++){
+        marker = map.createMarker({
+          lat: center[0],
+          lng: center[1],
+        })
+        map.addMarker(marker);
+        droneMarkers.push(marker);
+
+      }
+      // Update active drones panel in UI
+      updateDronesPanel(activeDrones);
+      toastr["success"]("Active drones list successfully updated!");
+    },
+    error: function() {
+      toastr["error"]("Error while getting active drones list from the central controller! Please try hitting Refresh.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+}
+
+
+
+
+// Ui related functions
+
+function updateDronesPanel(dronesList) {
+  // Update the drones panel in gui
+
+  //Clear drone-list contents.
+  $("#drone-list").empty();
+  for (i = 0; i < dronesList.length; i++) {
+    //Get drone id
+    var droneId = dronesList[i]["@id"].match(/([^\/]*)\/*$/)[1];
+    $("#drone-list").append('<li id="drone' + droneId + '"><a href="#">Drone id-' + droneId + '</a></li>');
   }
-  return {
-    "distance_moved": distance_moved,
-    "direction": direction
-  }
 }
 
 
-function gen_new_coordinates_from_change_in_coordinates(old_coordinates, change_in_coordinates) {
-  // Calculate new coordinates given coordinates(lat,lon) and change_in_coordinates(lat,lon).
-  new_lat = old_coordinates[0] - change_in_coordinates[0];
-  new_lon = old_coordinates[1] - change_in_coordinates[1];
-
-  return [new_lat, new_lon]
-
-}
-
-
-function get_new_coordinates(old_coordinates, distance_moved, direction) {
-  // Get new coordinates given old coordinates (lat,lon), distance moved in kilometers.
-  // direction of movement [N, S, E, W].
-
-  // Convert directions if needed
-  updated_data = convert_direction_to_north_or_west(distance_moved, direction);
-  distance_moved = updated_data["distance_moved"];
-  direction = updated_data["direction"];
-
-  if (direction == "N") {
-    latitude_change = change_in_latitude(distance_moved);
-    change_in_coordinates = [latitude_change, 0];
-  } else if (direction == "W") {
-    latitude = old_coordinates[0];
-    longitude_change = change_in_longitude(latitude, distance_moved);
-    change_in_coordinates = [0, longitude_change];
-  } else {
-
-    throw "Not a valid direction of movement! Please use one of  ['N', 'S', 'E', 'W']";
-  }
-
-  return gen_new_coordinates_from_change_in_coordinates(old_coordinates, change_in_coordinates)
-}
-
-
-function gen_square_path(controller_coordinates, dimension) {
-  // Generate a square path around central controller for area of interest.
-  var path = [];
-
-
-  path.push(get_new_coordinates(get_new_coordinates(controller_coordinates, dimension, "W"), dimension, "S"));
-  path.push(get_new_coordinates(get_new_coordinates(controller_coordinates, dimension, "W"), dimension, "N"));
-  path.push(get_new_coordinates(get_new_coordinates(controller_coordinates, dimension, "E"), dimension, "N"));
-  path.push(get_new_coordinates(get_new_coordinates(controller_coordinates, dimension, "E"), dimension, "S"));
-
-  console.log(path);
-  return path;
-}
-
-// gen_square_path(get_central_controller_location(), 5)
-
-function add_markers(map, coordinates, icon) {
+function addMarkers(map, coordinates, icon) {
   // Adds markers to the map given a list of coordinates and icon url.
   for (i = 0; i < coordinates.length; i++) {
     map.addMarker({
@@ -264,13 +306,12 @@ function add_markers(map, coordinates, icon) {
       lng: coordinates[i][1],
       title: String(coordinates[i][0]) + " ," + String(coordinates[i][1]),
       icon: icon,
-      // icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/3by2white.svg/150px-3by2white.svg.png",
     });
   }
 }
 
 
-function draw_polygon(map, path) {
+function drawPolygonForPath(map, path) {
   // Draw a polygon on the map
   polygon = map.drawPolygon({
     paths: path, // pre-defined polygon shape
@@ -280,10 +321,9 @@ function draw_polygon(map, path) {
     fillColor: '#FFF0',
     fillOpacity: 0.6
   });
-
 }
 
-function add_controller_marker(map, center) {
+function addCentralControllerMarker(map, center) {
   // Add central controller to the map
   map.addMarker({
     lat: center[0],
@@ -292,89 +332,48 @@ function add_controller_marker(map, center) {
     icon: "http://i.picresize.com/images/2017/07/27/1a5k.png",
     draggable: true,
     dragend: function(event) {
-      handle_controller_marker_drag(event);
+      handleCentralControllerMarkerDrag(event);
     }
   });
 }
 
-function handle_controller_marker_drag(event) {
+function handleCentralControllerMarkerDrag(event) {
   // Handle the controller marker dragging event.
   var lat = event.latLng.lat();
   var lng = event.latLng.lng();
-  var new_controller_location = [lat, lng];
+  var newCentralControllerLocation = [lat, lng];
+  // remove all previous polygons and markers.
   map.removePolygons();
   map.removeMarkers();
 
   // Update the controller location
-  update_central_controller_location(new_controller_location);
-  // Generate square path
-  var path = gen_square_path(new_controller_location, 10);
-  add_markers(map, path, "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/3by2white.svg/150px-3by2white.svg.png");
-  draw_polygon(map, path);
-  add_controller_marker(map, new_controller_location);
-  // map.fitZoom();
-
+  udpateCentralControllerLocation(newCentralControllerLocation);
+  // Generate new square path
+  var path = genSquarePath(newCentralControllerLocation, 10);
+  // Add four invisible markers for area of interest coordinates
+  addMarkers(map, path, "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/3by2white.svg/150px-3by2white.svg.png");
+  //Draw new polygon on map
+  drawPolygonForPath(map, path);
+  // Add updated central controller marker
+  addCentralControllerMarker(map, newCentralControllerLocation);
+  // Update the active drones list and generate new markers
+  getActiveDronesAndGenerateMarkers();
 }
 
 
-
-
-
-function initialize_map(center) {
-  // Initialize map with central controller as center point.
-  map = new GMaps({
-    el: '#map',
-    lat: center[0],
-    lng: center[1]
-  });
-  return map;
-}
-
-function initialize_gui(center) {
-  // Initialize the Simulation Map GUI
-
-  map = initialize_map(center);
-  // Generate area of interest polygon path and add markers.
-  path = gen_square_path(center, 10);
-  add_markers(map, path, "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/3by2white.svg/150px-3by2white.svg.png");
-  // Draw the polygon on map.
-  draw_polygon(map, path);
-  // Add central controller draggable marker to the map
-  add_controller_marker(map, center);
-  // fitZoom map
-  map.setZoom(12);
-  // map.refresh()
-
-  map.addOverlayMapType({
-    index: 0,
-    tileSize: new google.maps.Size(256, 256),
-    getTile: getTile
-  });
-}
-
-get_central_controller_location_and_initialize();
-update_drones_list();
-
-$("#message-submit-btn").click(function() {
-  message = $("#message").val();
-  if (message.length > 0) {
-    submit_message(message);
-    $("#message").val("");
+function checkDrone(drone){
+  // Check if the drone object has a "DroneState object".
+  if ("DroneState" in drone){
+    return true;
   }
-});
-
-$("#message-form").keypress(function(e) {
-  if (e.which == 13) {
-    message = $("#message").val();
-    if (message.length > 0) {
-      submit_message(message);
-      $("#message").val("");
-    }
+  else{
+    return false;
   }
-});
+}
 
 
 function getTile(coord, zoom, ownerDocument) {
+  // Grid overlay tile function from gmaps.js
   var div = ownerDocument.createElement('div');
   div.innerHTML = coord;
   div.style.width = this.tileSize.width + 'px';
@@ -388,19 +387,83 @@ function getTile(coord, zoom, ownerDocument) {
 };
 
 
-
-$("#refresh-drone-list").click(function() {
-  update_drones_list();
-});
-
-function update_simulation() {
-  // console.log(active_drones);
-  if (active_drones.length > 0) {
-    for (i = 0; i < active_drones.length; i++) {
-      get_and_check_drone(active_drones[i]);
-    }
-  }
-  setTimeout(update_simulation, 1500);
+function initialiseMap(center) {
+  // Initialise map with central controller as center point.
+  map = new GMaps({
+    el: '#map',
+    lat: center[0],
+    lng: center[1]
+  });
+  return map;
 }
 
-update_simulation();
+
+function initialiseGui(center) {
+  // Initialise the Simulation Map GUI
+
+  map = initialiseMap(center);
+  // Generate area of interest polygon path and add markers.
+  path = genSquarePath(center, 10);
+  addMarkers(map, path, "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/3by2white.svg/150px-3by2white.svg.png");
+  // Draw the polygon on map.
+  drawPolygonForPath(map, path);
+  // Add central controller draggable marker to the map
+  addCentralControllerMarker(map, center);
+  // Set map zoom level to 12
+  map.setZoom(12);
+  // Add Grid overlay to mamp
+  map.addOverlayMapType({
+    index: 0,
+    tileSize: new google.maps.Size(128,128),
+    getTile: getTile
+  });
+  //update the active drones list and generate drone markers
+  getActiveDronesAndGenerateMarkers();
+}
+
+//Update the simulation UI every couple of seconds (Drone markers)
+function updateSimulation() {
+  if (activeDrones.length > 0) {
+    for (i = 0; i < activeDrones.length; i++) {
+      getDroneDetailsAndUpdateMarker(activeDrones[i], droneMarkers[i]);
+    }
+  }
+  setTimeout(updateSimulation, 10000);
+}
+
+
+
+
+
+// Bindings to different elements
+
+//Message form bindings
+$("#message-submit-btn").click(function() {
+  message = $("#message").val();
+  if (message.length > 0) {
+    submitMessage(message);
+    $("#message").val("");
+  }
+});
+
+$("#message-form").keypress(function(e) {
+  if (e.which == 13) {
+    message = $("#message").val();
+    if (message.length > 0) {
+      submitMessage(message);
+      $("#message").val("");
+    }
+  }
+});
+
+// Drone list refresh button binding
+$("#refresh-drone-list").click(function() {
+  getActiveDronesAndGenerateMarkers();
+});
+
+
+
+
+// Initialize everything
+getCentralControllerLocationAndInitialise();
+updateSimulation();
