@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="https://bootswatch.com/flatly/bootstrap.min.css">
+  <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+</head>
+<body>
+
+  <div class="navbar navbar-fixed-top navbar-default" role="navigation">
+      <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="#">Hydra Flock Demo</a>
+          </div>
+
+          <!-- /.nav-collapse -->
+      </div>
+      <!-- /.container -->
+  </div>
+  <!-- /.navbar -->
+
+  <div class="container-fluid">
+      <div class="row row-offcanvas row-offcanvas-left">
+          <div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
+              <div class="sidebar-nav">
+
+                <div class="panel-group">
+                  <div class="panel panel-default">
+                    <div class="panel-heading">
+                      <div class="panel-title">
+                        <a data-toggle="collapse" class="text-center" href="#message-panel">Issue Message</a>
+                      </div>
+                    </div>
+                    <div id="message-panel" class="panel-collapse collapse">
+                      <div  class="panel-body">
+                        <form id="message-form" class="form-inline" onSubmit="return false;">
+ <div class="form-group">
+   <input type="text" class="form-control" id="message" placeholder="Enter Message...">
+ </div>
+ <button type="button" class="btn btn-info" id="message-submit-btn"> Issue</button>
+</form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+                  <div class="panel-group">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">
+                        <div class="panel-title">
+                          <a data-toggle="collapse" class="text-center" href="#drone-list-panel">Active Drones</a>
+                          <button type="button" class="btn btn-info btn-sm pull-right" id="refresh-drone-list">Refresh</button>
+                        </div>
+                      </div>
+                      <div id="drone-list-panel" class="panel-collapse collapse">
+                        <div class="panel-body">
+                          <ul class="nav drone-list" id="drone-list">
+
+                            <li id="drone1"><a href="#">Drone 1</a></li>
+                  </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+                <div class="panel-group">
+                  <div class="panel panel-default">
+                    <div class="panel-heading">
+                      <div class="panel-title">
+                        <a data-toggle="collapse" class="text-center" href="#server-logs-panel">Controller Logs</a>
+                      </div>
+                    </div>
+                    <div id="server-logs-panel" class="panel-collapse collapse">
+                      <div id="server-logs" class="panel-body">
+                        <h4>Logs from Central Server will be displayed here!</h4>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+                              <div class="panel-group">
+                                <div class="panel panel-default">
+                                  <div class="panel-heading">
+                                    <div class="panel-title">
+                                      <a data-toggle="collapse" class="text-center" href="#datastream-panel">Drone Datastream</a>
+                                    </div>
+                                  </div>
+                                  <div id="datastream-panel" class="panel-collapse collapse">
+                                    <div id="server-logs" class="panel-body">
+                                      <h4>Datastream from all the drones will be displayed here!</h4>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+              </div>
+
+              <!--/.well -->
+          </div>
+          <!--/span-->
+
+          <div class="col-xs-12 col-sm-9">
+
+            <div id="map"></div>
+          </div>
+          <!--/span-->
+
+
+      </div>
+      <!--/row-->
+
+      <hr>
+
+      <footer>
+          <p class="text-center">Made by <a href="https://github.com/HTTP-APIs/">Hydra CG</a> as a <a href="https://summerofcode.withgoogle.com/">GSOC</a> project</p>
+      </footer>
+
+  </div>
+  <!--/.container-->
+
+
+
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gmaps.js/0.4.25/gmaps.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="http://maps.google.com/maps/api/js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
