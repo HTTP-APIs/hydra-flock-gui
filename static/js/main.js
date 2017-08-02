@@ -236,7 +236,7 @@ function getDroneDetailsAndUpdateMarker(drone, marker) {
           lat: dronePosition[0],
           lng: dronePosition[1]
         })
-        marker.setTitle(JSON.stringify("Drone ID" + data["DroneID"]) + " - " + JSON.stringify(data["DroneState"]));
+        marker.setTitle(JSON.stringify("Drone ID " + data["DroneID"]) + " - " + JSON.stringify(data["DroneState"]));
         console.log("Drone marker position updated!");
 
       }
@@ -296,7 +296,7 @@ function updateDronesPanel(dronesList) {
   for (i = 0; i < dronesList.length; i++) {
     //Get drone id
     var droneId = dronesList[i]["@id"].match(/([^\/]*)\/*$/)[1];
-    $("#drone-list").append('<li id="drone' + droneId + '"><a href="#">Drone id-' + droneId + '</a></li>');
+    $("#drone-list").append('<li id="drone' + droneId + '"><a href="#">DroneID ' + droneId + '</a></li>');
   }
 }
 
