@@ -132,7 +132,7 @@ function getCentralControllerLocationAndInitialise() {
     },
     error: function() {
       toastr["error"]("Error getting Central Controller Coordinates! Using default Coordinates.");
-      center = [-10.040397656836609, -55.03373871559225];
+      center = [0, 0];
       initialiseGui(center);
     },
     dataType: 'json',
@@ -172,18 +172,18 @@ function deleteDrone(drone) {
     type: "DELETE",
     url: centralControllerUrl + drone["@id"],
     success: function() {
-      toastr["success"]("Drone with id "+ drone["@id"]+ "successfully removed from central controller!");
+      toastr["success"]("Drone with id " + drone["@id"] + "successfully removed from central controller!");
       //Update the activeDrones list and generate new markers.
       getActiveDronesAndGenerateMarkers();
     },
     error: function() {
-      toastr["error"]("Error deleting drone with id "+ drone["@id"]+ " from the central controller!");
+      toastr["error"]("Error deleting drone with id " + drone["@id"] + " from the central controller!");
       // Remove the drone from activeDrones list
       droneIndex = activeDrones.indexOf(drone);
       if (droneIndex > -1) {
         activeDrones.splice(droneIndex, 1);
         updateDronesPanel(activeDrones);
-        toastr["info"]("Drone with id "+ drone["@id"]+ " removed from local activeDrones list.");
+        toastr["info"]("Drone with id " + drone["@id"] + " removed from local activeDrones list.");
 
       }
     },
@@ -226,14 +226,17 @@ function getDroneDetailsAndUpdateMarker(drone, marker) {
     url: centralControllerUrl + drone["@id"],
     success: function(data) {
       // Check if drone is faulty
-      if (! checkDrone(data)) {
+      if (!checkDrone(data)) {
         // console.log(data);
         deleteDrone(drone);
-      }
-      else{
+      } else {
         // Extract drone position Coordinates
         dronePosition = data["DroneState"]["Position"].split(",").map(Number);
-        marker.setPosition({lat: dronePosition[0], lng: dronePosition[1]})
+        marker.setPosition({
+          lat: dronePosition[0],
+          lng: dronePosition[1]
+        })
+        marker.setTitle(JSON.stringify("Drone ID " + data["DroneID"]) + " - " + JSON.stringify(data["DroneState"]));
         console.log("Drone marker position updated!");
 
       }
@@ -258,7 +261,7 @@ function getActiveDronesAndGenerateMarkers() {
       // Reset droneMarkers list
       droneMarkers = [];
       // Add the markers to the droneMarkers list.
-      for(i = 0; i< data["members"].length;i++){
+      for (i = 0; i < data["members"].length; i++) {
         marker = map.createMarker({
           lat: center[0],
           lng: center[1],
@@ -293,7 +296,7 @@ function updateDronesPanel(dronesList) {
   for (i = 0; i < dronesList.length; i++) {
     //Get drone id
     var droneId = dronesList[i]["@id"].match(/([^\/]*)\/*$/)[1];
-    $("#drone-list").append('<li id="drone' + droneId + '"><a href="#">Drone id-' + droneId + '</a></li>');
+    $("#drone-list").append('<li id="drone' + droneId + '"><a href="#">DroneID ' + droneId + '</a></li>');
   }
 }
 
@@ -361,12 +364,11 @@ function handleCentralControllerMarkerDrag(event) {
 }
 
 
-function checkDrone(drone){
+function checkDrone(drone) {
   // Check if the drone object has a "DroneState object".
-  if ("DroneState" in drone){
+  if ("DroneState" in drone) {
     return true;
-  }
-  else{
+  } else {
     return false;
   }
 }
@@ -412,11 +414,11 @@ function initialiseGui(center) {
   // Set map zoom level to 12
   map.setZoom(12);
   // Add Grid overlay to mamp
-  map.addOverlayMapType({
-    index: 0,
-    tileSize: new google.maps.Size(128,128),
-    getTile: getTile
-  });
+  // map.addOverlayMapType({
+  //   index: 0,
+  //   tileSize: new google.maps.Size(128,128),
+  //   getTile: getTile
+  // });
   //update the active drones list and generate drone markers
   getActiveDronesAndGenerateMarkers();
 }
@@ -428,7 +430,7 @@ function updateSimulation() {
       getDroneDetailsAndUpdateMarker(activeDrones[i], droneMarkers[i]);
     }
   }
-  setTimeout(updateSimulation, 10000);
+  setTimeout(updateSimulation, 15000);
 }
 
 
