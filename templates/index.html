@@ -18,16 +18,16 @@
       <div class="navbar-header">
         <a class="navbar-brand" href="#">Hydra Flock Demo</a>
       </div>
-
       <!-- /.nav-collapse -->
     </div>
     <!-- /.container -->
   </div>
-  <!-- /.navbar -->
+    <!-- /.navbar -->
 
-  <div class="container-fluid">
+
+  <div class="container-fluid" style="margin-top: 10px;">
     <div class="row row-offcanvas row-offcanvas-left">
-      <div class="col-xs-6 col-sm-3 sidebar-offcanvas" id="sidebar" role="navigation">
+      <div class="col-xs-12 col-sm-3 col-md-3 sidebar-offcanvas" id="sidebar" role="navigation">
         <div class="sidebar-nav">
 
           <div class="panel-group">
@@ -37,7 +37,7 @@
                   <a data-toggle="collapse" class="text-center" href="#message-panel">Issue Message</a>
                 </div>
               </div>
-              <div id="message-panel" class="panel-collapse collapse">
+              <div id="message-panel" class="panel-collapse collapse in">
                 <div class="panel-body">
                   <form id="message-form" class="form-inline" onSubmit="return false;">
                     <div class="form-group">
@@ -60,28 +60,11 @@
               </div>
               <div id="drone-list-panel" class="panel-collapse collapse">
                 <div class="panel-body">
-                  <ul class="nav drone-list" id="drone-list"></ul>
+                  <ul class="nav" id="drone-list"></ul>
                 </div>
               </div>
             </div>
           </div>
-
-
-          <div class="panel-group">
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <div class="panel-title">
-                  <a data-toggle="collapse" class="text-center" href="#server-logs-panel">Controller Logs</a>
-                </div>
-              </div>
-              <div id="server-logs-panel" class="panel-collapse collapse">
-                <div id="server-logs" class="panel-body">
-                  <h4>Logs from Central Server will be displayed here!</h4>
-                </div>
-              </div>
-            </div>
-          </div>
-
 
           <div class="panel-group">
             <div class="panel panel-default">
@@ -90,9 +73,9 @@
                   <a data-toggle="collapse" class="text-center" href="#datastream-panel">Drone Datastream</a>
                 </div>
               </div>
-              <div id="datastream-panel" class="panel-collapse collapse">
-                <div id="server-logs" class="panel-body">
-                  <h4>Datastream from all the drones will be displayed here!</h4>
+              <div id="datastream-panel" class="panel-collapse collapse in">
+                <div id="datastream-logs" class="panel-body">
+                  <ul class="nav" id="datastream-list"></ul>
                 </div>
               </div>
             </div>
@@ -104,18 +87,59 @@
       </div>
       <!--/span-->
 
-      <div class="col-xs-12 col-sm-9">
+      <div class="col-xs-12 col-sm-6 col-md-6">
 
         <div id="map"></div>
       </div>
       <!--/span-->
 
+      <div class="col-xs-12 col-sm-3 col-md-3 sidebar-offcanvas" id="sidebar" role="navigation">
+        <div class="sidebar-nav">
+
+
+          <div class="panel-group">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <div class="panel-title">
+                  <a data-toggle="collapse" class="text-center" href="#controller-logs-panel">Controller Logs</a>
+                </div>
+              </div>
+              <div id="controller-logs-panel" class="panel-collapse collapse in">
+                <div id="controller-logs" class="panel-body">
+                  <h4>Logs from Central Server will be displayed here!</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="panel-group">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <div class="panel-title">
+                  <a data-toggle="collapse" class="text-center" href="#drone-logs-panel">Drone Logs</a>
+                </div>
+              </div>
+              <div id="drone-logs-panel" class="panel-collapse collapse in">
+                <div id="drone-logs" class="panel-body">
+                  <ul class="nav" id="drone-list"></ul>
+                  <h4>Logs from Drones will be displayed here!</h4>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!--/.well -->
+      </div>
+      <!--/span-->
+
+
 
     </div>
     <!--/row-->
-
-    <hr>
-
     <footer>
       <p class="text-center">Made by <a href="https://github.com/HTTP-APIs/">Hydra CG</a> as a <a href="https://summerofcode.withgoogle.com/">GSOC</a> project</p>
     </footer>
