@@ -262,7 +262,7 @@ function getActiveDronesAndGenerateMarkers() {
       // Update the activeDrones global list
       activeDrones = data["members"];
       // Reset droneMarkers list
-      for (i=0; i< droneMarkers.length; i++){
+      for (i = 0; i < droneMarkers.length; i++) {
         droneMarkers[i].setMap(null);
       }
       droneMarkers = [];
@@ -298,7 +298,7 @@ function getDatastreamCollectionAndUpdateAvailableDatastream() {
     success: function(data) {
       // Create temp datastreamArray
       var datastreamArray = data["members"];
-      datastreamArray = datastreamArray.slice(Math.max(datastreamArray.length - 15, 1))
+      datastreamArray = datastreamArray.slice(Math.max(datastreamArray.length - 15, 0))
       for (i = 0; i < datastreamArray.length; i++) {
         if ($.inArray(datastreamArray[i]["@id"], availableDatastream) == -1) {
           console.log(i);
@@ -348,7 +348,7 @@ function getDroneLogsCollectionAndUpdateAvailableDroneLogs() {
     success: function(data) {
       // Create temp droneLogArray
       var droneLogArray = data["members"];
-      droneLogArray = droneLogArray.slice(Math.max(droneLogArray.length - 15, 1))
+      droneLogArray = droneLogArray.slice(Math.max(droneLogArray.length - 15, 0))
       for (i = 0; i < droneLogArray.length; i++) {
         if ($.inArray(droneLogArray[i]["@id"], availableDroneLogs) == -1) {
           console.log(i);
@@ -397,7 +397,7 @@ function getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs() {
     success: function(data) {
       // Create temp httpApiLogArray
       var httpApiLogArray = data["members"];
-      httpApiLogArray = httpApiLogArray.slice(Math.max(httpApiLogArray.length - 10, 1))
+      httpApiLogArray = httpApiLogArray.slice(Math.max(httpApiLogArray.length - 10, 0))
       for (i = 0; i < httpApiLogArray.length; i++) {
         if ($.inArray(httpApiLogArray[i]["@id"], availableHttpApiLogs) == -1) {
           console.log(i);
@@ -445,7 +445,7 @@ function getHttpApiLogDetailsAndUpdateLogs(httpApiLogId) {
 function addDatastreamToLogs(datastream) {
   // Update the datastream panel in gui
   if (datastream["Temperature"] == "High" || datastream["Temperature"] == "Critical") {
-    $('<li> <a href='+centralControllerUrl+datastream["@id"]+'>' + datastream["Temperature"] + ' temperature detected by Drone ' + datastream["DroneID"] + '</a></li>').hide().prependTo("#datastream-list").slideDown("slow");
+    $('<li> <a href=' + centralControllerUrl + datastream["@id"] + '>' + datastream["Temperature"] + ' temperature detected by Drone ' + datastream["DroneID"] + '</a></li>').hide().prependTo("#datastream-list").slideDown("fast");
     $("#datastream-list li:gt(29):last").remove();
   } else {
     console.log("Normal event")
@@ -454,14 +454,14 @@ function addDatastreamToLogs(datastream) {
 
 function addDroneLogToLogs(droneLog) {
   // Update the drone logs panel in gui
-  $('<li> <a href='+centralControllerUrl+droneLog["@id"]+'>' + droneLog["DroneID"] +" "+ droneLog["LogString"] +'</a></li>').hide().prependTo("#drone-logs-list").slideDown("slow");
+  $('<li> <a href=' + centralControllerUrl + droneLog["@id"] + '>' + droneLog["DroneID"] + " " + droneLog["LogString"] + '</a></li>').hide().prependTo("#drone-logs-list").slideDown("fast");
 
   $("#drone-logs-list li:gt(29):last").remove();
 }
 
 function addHttpApiLogToLogs(httpApiLog) {
   // Update the drone logs panel in gui
-  $('<li> <a href='+centralControllerUrl+httpApiLog["@id"]+'>' + httpApiLog["Subject"] +" "+ httpApiLog["Predicate"]+" at "+ httpApiLog["Object"] +'</a></li>').hide().prependTo('#http-api-logs-list').slideDown("slow");
+  $('<li> <a href=' + centralControllerUrl + httpApiLog["@id"] + '>' + httpApiLog["Subject"] + " " + httpApiLog["Predicate"] + " at " + httpApiLog["Object"] + '</a></li>').hide().prependTo('#http-api-logs-list').slideDown("fast");
   $("#http-api-logs-list li:gt(29):last").remove();
 }
 
@@ -473,7 +473,7 @@ function updateDronesPanel(dronesList) {
   for (i = 0; i < dronesList.length; i++) {
     //Get drone id
     var droneId = dronesList[i]["@id"].match(/([^\/]*)\/*$/)[1];
-    $("#drone-list").append('<li id="drone' + droneId + '"><a href='+centralControllerUrl+dronesList[i]["@id"]+'>Drone ' + droneId + '</a></li>');
+    $("#drone-list").append('<li id="drone' + droneId + '"><a href=' + centralControllerUrl + dronesList[i]["@id"] + '>Drone ' + droneId + '</a></li>');
   }
 }
 
@@ -649,9 +649,10 @@ $("#refresh-drone-list").click(function() {
 
 
 
-
-// Initialize everything
-getCentralControllerLocationAndInitialise();
-updateSimulation();
-updateHttpApiLogs();
-getDatastreamCollectionAndUpdateAvailableDatastream()
+$(document).ready(function() {
+  // Initialize everything
+  getCentralControllerLocationAndInitialise();
+  updateSimulation();
+  updateHttpApiLogs();
+  getDatastreamCollectionAndUpdateAvailableDatastream()
+});
