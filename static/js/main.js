@@ -614,7 +614,7 @@ function updateSimulation() {
 
 function updateHttpApiLogs() {
   getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs()
-  setTimeout(updateSimulation, 2000);
+  setTimeout(updateHttpApiLogs, 2000);
 }
 
 
