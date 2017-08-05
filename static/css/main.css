@@ -58,46 +58,25 @@ footer {
 }
 
 #datastream-panel {
-  height: 45vh;
+  max-height: 33vh;
   overflow-y: scroll;
   overflow-x: hidden;
 }
-
-
-#datastream-logs-panel {
-  height: 42vh;
-  overflow-y: scroll;
-  overflow-x: hidden;
-}
-
 
 #controller-logs-panel {
-  height: 33vh;
+  max-height: 33vh;
   overflow-y: scroll;
   overflow-x: hidden;
 }
 
 #drone-logs-panel{
-  height:33vh;
+  max-height:33vh;
   overflow-y: scroll;
   overflow-x: hidden;
 }
 
 #http-api-logs-panel{
-  height: 50px;
-  background-color: #2c3e50;
-  color:#ffffff;
-  padding-top: 15px;
-  font-size: 20px;
-}
-
-#api-logs-title{
-  padding-right: 50px;
-}
-
-#api-logs-data{
-  color:rgb(24, 188, 156);
-}
-#http-logs-hr{
-margin:0px 0px 2px 0px;
+  max-height: 42vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }

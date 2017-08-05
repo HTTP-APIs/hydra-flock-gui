@@ -9,7 +9,7 @@ toastr.options = {
   "debug": false,
   "newestOnTop": true,
   "progressBar": false,
-  "positionClass": "toast-bottom-right",
+  "positionClass": "toast-bottom-center",
   "preventDuplicates": true,
   "onclick": null,
   "showDuration": "2000",
@@ -29,6 +29,8 @@ var center, map, path, message;
 var activeDrones = [];
 var droneMarkers = [];
 var availableDatastream = [];
+var availableDroneLogs = [];
+var availableHttpApiLogs = [];
 
 
 // Distance conversion related functions
@@ -260,6 +262,9 @@ function getActiveDronesAndGenerateMarkers() {
       // Update the activeDrones global list
       activeDrones = data["members"];
       // Reset droneMarkers list
+      for (i=0; i< droneMarkers.length; i++){
+        droneMarkers[i].setMap(null);
+      }
       droneMarkers = [];
       // Add the markers to the droneMarkers list.
       for (i = 0; i < data["members"].length; i++) {
@@ -276,7 +281,7 @@ function getActiveDronesAndGenerateMarkers() {
       toastr["success"]("Active drones list successfully updated!");
     },
     error: function() {
-      toastr["error"]("Error while getting active drones list from the central controller! Please try hitting Refresh.");
+      toastr["error"]("Something wen't wrong while getting active drones list from the central controller! Please try hitting Refresh.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -291,18 +296,18 @@ function getDatastreamCollectionAndUpdateAvailableDatastream() {
     type: "GET",
     url: centralControllerUrl + "/api/DatastreamCollection",
     success: function(data) {
-      // Update the activeDrones global list
+      // Create temp datastreamArray
       var datastreamArray = data["members"];
       datastreamArray = datastreamArray.slice(Math.max(datastreamArray.length - 15, 1))
       for (i = 0; i < datastreamArray.length; i++) {
-        if($.inArray(datastreamArray[i]["@id"], availableDatastream) == -1){
+        if ($.inArray(datastreamArray[i]["@id"], availableDatastream) == -1) {
           console.log(i);
           getDatastreamDetailsAndUpdateLogs(datastreamArray[i]["@id"]);
         }
       }
     },
     error: function() {
-      toastr["error"]("Error while getting datastream from the central controller! Please try hitting Refresh.");
+      toastr["error"]("Something wen't wrong while getting Datastream collection from the central controller! Please try hitting Refresh.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -319,14 +324,113 @@ function getDatastreamDetailsAndUpdateLogs(datastreamId) {
     type: "GET",
     url: centralControllerUrl + datastreamId,
     success: function(data) {
-      if (availableDatastream.length >= 30){
+      if (availableDatastream.length >= 30) {
         availableDatastream.shift()
       }
       availableDatastream.push(datastreamId)
       addDatastreamToLogs(data);
     },
     error: function() {
-      toastr["error"]("Something wen't wrong while getting datastream details! Please try refreshing the page.");
+      toastr["error"]("Something wen't wrong while getting Datastream details! Please try refreshing the page.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+}
+
+
+function getDroneLogsCollectionAndUpdateAvailableDroneLogs() {
+  // Get dronelog list from the central controller.
+  $.ajax({
+    type: "GET",
+    url: centralControllerUrl + "/api/DroneLogCollection",
+    success: function(data) {
+      // Create temp droneLogArray
+      var droneLogArray = data["members"];
+      droneLogArray = droneLogArray.slice(Math.max(droneLogArray.length - 15, 1))
+      for (i = 0; i < droneLogArray.length; i++) {
+        if ($.inArray(droneLogArray[i]["@id"], availableDroneLogs) == -1) {
+          console.log(i);
+          getDroneLogDetailsAndUpdateLogs(droneLogArray[i]["@id"]);
+        }
+      }
+    },
+    error: function() {
+      toastr["error"]("Error while getting Drone logs from the central controller! Please try hitting Refresh.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+}
+
+
+function getDroneLogDetailsAndUpdateLogs(droneLogId) {
+  // Get Drone Log details from the central server,
+  // Update the logs panel in UI
+
+  $.ajax({
+    type: "GET",
+    url: centralControllerUrl + droneLogId,
+    success: function(data) {
+      if (availableDroneLogs.length >= 30) {
+        availableDroneLogs.shift()
+      }
+      availableDroneLogs.push(droneLogId)
+      addDroneLogToLogs(data);
+    },
+    error: function() {
+      toastr["error"]("Something wen't wrong while getting Drone log! Please try refreshing the page.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+}
+
+function getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs() {
+  // Get Http Api Logs list from the central controller.
+  $.ajax({
+    type: "GET",
+    url: centralControllerUrl + "/api/HttpApiLogCollection",
+    success: function(data) {
+      // Create temp httpApiLogArray
+      var httpApiLogArray = data["members"];
+      httpApiLogArray = httpApiLogArray.slice(Math.max(httpApiLogArray.length - 10, 1))
+      for (i = 0; i < httpApiLogArray.length; i++) {
+        if ($.inArray(httpApiLogArray[i]["@id"], availableHttpApiLogs) == -1) {
+          console.log(i);
+          getHttpApiLogDetailsAndUpdateLogs(httpApiLogArray[i]["@id"]);
+        }
+      }
+    },
+    error: function() {
+      toastr["error"]("Error while getting Http Api logs from the central controller! Please try hitting Refresh.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+}
+
+
+function getHttpApiLogDetailsAndUpdateLogs(httpApiLogId) {
+  // Get datastream details from the central server,
+  // Update the logs panel in UI
+
+  $.ajax({
+    type: "GET",
+    url: centralControllerUrl + httpApiLogId,
+    success: function(data) {
+      if (availableHttpApiLogs.length >= 20) {
+        availableHttpApiLogs.shift()
+      }
+      availableHttpApiLogs.push(httpApiLogId)
+      addHttpApiLogToLogs(data);
+    },
+    error: function() {
+      toastr["error"]("Something wen't wrong while getting Http Api log! Please try refreshing the page.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -336,19 +440,29 @@ function getDatastreamDetailsAndUpdateLogs(datastreamId) {
 
 
 
-
 // Ui related functions
 
 function addDatastreamToLogs(datastream) {
   // Update the datastream panel in gui
-  if( datastream["Temperature"] == "High" || datastream["Temperature"] == "Critical"){
-    $("#datastream-list").prepend('<li> <a href="#">'+datastream["Temperature"] +' temperature detected by Drone ' + datastream["DroneID"] +'</a></li>');
+  if (datastream["Temperature"] == "High" || datastream["Temperature"] == "Critical") {
+    $("#datastream-list").prepend('<li> <a href='+centralControllerUrl+datastream["@id"]+'>' + datastream["Temperature"] + ' temperature detected by Drone ' + datastream["DroneID"] + '</a></li>');
     $("#datastream-list li:gt(29):last").remove();
-  }
-  else{
+  } else {
     console.log("Normal event")
   }
-  }
+}
+
+function addDroneLogToLogs(droneLog) {
+  // Update the drone logs panel in gui
+  $("#drone-logs-list").prepend('<li> <a href='+centralControllerUrl+droneLog["@id"]+'>' + droneLog["DroneID"] +" "+ droneLog["LogString"] +'</a></li>');
+  $("#drone-logs-list li:gt(29):last").remove();
+}
+
+function addHttpApiLogToLogs(httpApiLog) {
+  // Update the drone logs panel in gui
+  $("#http-api-logs-list").prepend('<li> <a href='+centralControllerUrl+httpApiLog["@id"]+'>' + httpApiLog["Subject"] +" "+ httpApiLog["Predicate"]+" "+ httpApiLog["Object"] +'</a></li>');
+  $("#http-api-logs-list li:gt(29):last").remove();
+}
 
 function updateDronesPanel(dronesList) {
   // Update the drones panel in gui
@@ -358,7 +472,7 @@ function updateDronesPanel(dronesList) {
   for (i = 0; i < dronesList.length; i++) {
     //Get drone id
     var droneId = dronesList[i]["@id"].match(/([^\/]*)\/*$/)[1];
-    $("#drone-list").append('<li id="drone' + droneId + '"><a href="#">Drone ' + droneId + '</a></li>');
+    $("#drone-list").append('<li id="drone' + droneId + '"><a href='+centralControllerUrl+dronesList[i]["@id"]+'>Drone ' + droneId + '</a></li>');
   }
 }
 
@@ -494,9 +608,14 @@ function updateSimulation() {
     }
   }
   getDatastreamCollectionAndUpdateAvailableDatastream();
+  getDroneLogsCollectionAndUpdateAvailableDroneLogs();
   setTimeout(updateSimulation, 15000);
 }
 
+function updateHttpApiLogs() {
+  getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs()
+  setTimeout(updateSimulation, 2000);
+}
 
 
 
@@ -533,4 +652,5 @@ $("#refresh-drone-list").click(function() {
 // Initialize everything
 getCentralControllerLocationAndInitialise();
 updateSimulation();
+updateHttpApiLogs();
 getDatastreamCollectionAndUpdateAvailableDatastream()
