@@ -445,7 +445,7 @@ function getHttpApiLogDetailsAndUpdateLogs(httpApiLogId) {
 function addDatastreamToLogs(datastream) {
   // Update the datastream panel in gui
   if (datastream["Temperature"] == "High" || datastream["Temperature"] == "Critical") {
-    $("#datastream-list").prepend('<li> <a href='+centralControllerUrl+datastream["@id"]+'>' + datastream["Temperature"] + ' temperature detected by Drone ' + datastream["DroneID"] + '</a></li>');
+    $('<li> <a href='+centralControllerUrl+datastream["@id"]+'>' + datastream["Temperature"] + ' temperature detected by Drone ' + datastream["DroneID"] + '</a></li>').hide().prependTo("#datastream-list").slideDown("slow");
     $("#datastream-list li:gt(29):last").remove();
   } else {
     console.log("Normal event")
@@ -454,13 +454,14 @@ function addDatastreamToLogs(datastream) {
 
 function addDroneLogToLogs(droneLog) {
   // Update the drone logs panel in gui
-  $("#drone-logs-list").prepend('<li> <a href='+centralControllerUrl+droneLog["@id"]+'>' + droneLog["DroneID"] +" "+ droneLog["LogString"] +'</a></li>');
+  $('<li> <a href='+centralControllerUrl+droneLog["@id"]+'>' + droneLog["DroneID"] +" "+ droneLog["LogString"] +'</a></li>').hide().prependTo("#drone-logs-list").slideDown("slow");
+
   $("#drone-logs-list li:gt(29):last").remove();
 }
 
 function addHttpApiLogToLogs(httpApiLog) {
   // Update the drone logs panel in gui
-  $("#http-api-logs-list").prepend('<li> <a href='+centralControllerUrl+httpApiLog["@id"]+'>' + httpApiLog["Subject"] +" "+ httpApiLog["Predicate"]+" "+ httpApiLog["Object"] +'</a></li>');
+  $('<li> <a href='+centralControllerUrl+httpApiLog["@id"]+'>' + httpApiLog["Subject"] +" "+ httpApiLog["Predicate"]+" at "+ httpApiLog["Object"] +'</a></li>').hide().prependTo('#http-api-logs-list').slideDown("slow");
   $("#http-api-logs-list li:gt(29):last").remove();
 }
 
@@ -614,7 +615,7 @@ function updateSimulation() {
 
 function updateHttpApiLogs() {
   getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs()
-  setTimeout(updateHttpApiLogs, 2000);
+  setTimeout(updateHttpApiLogs, 1000);
 }
 
 
