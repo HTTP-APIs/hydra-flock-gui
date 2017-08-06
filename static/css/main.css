@@ -52,7 +52,31 @@ footer {
 }
 
 #map {
-  width: 74vw;
+  width: 48vw;
   margin-top: 10px;
-  height: 90vh;
+  height: 75vh;
+}
+
+#datastream-panel {
+  max-height: 33vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+#controller-logs-panel {
+  max-height: 33vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+#drone-logs-panel{
+  max-height:33vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+#http-api-logs-panel{
+  max-height: 42vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
