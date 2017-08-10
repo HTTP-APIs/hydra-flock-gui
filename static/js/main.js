@@ -31,6 +31,7 @@ var droneMarkers = [];
 var availableDatastream = [];
 var availableDroneLogs = [];
 var availableHttpApiLogs = [];
+var availableControllerLogs = [];
 
 
 // Distance conversion related functions
@@ -416,7 +417,7 @@ function getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs() {
 
 
 function getHttpApiLogDetailsAndUpdateLogs(httpApiLogId) {
-  // Get datastream details from the central server,
+  // Get Http Api log details from the central server,
   // Update the logs panel in UI
 
   $.ajax({
@@ -431,6 +432,56 @@ function getHttpApiLogDetailsAndUpdateLogs(httpApiLogId) {
     },
     error: function() {
       toastr["error"]("Something wen't wrong while getting Http Api log! Please try refreshing the page.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+}
+
+
+function getControllerLogsCollectionAndUpdateAvailableControllerLogs() {
+  // Get Http Api Logs list from the central controller.
+  $.ajax({
+    type: "GET",
+    url: centralControllerUrl + "/api/ControllerLogCollection",
+    success: function(data) {
+      // Create temp httpApiLogArray
+      var contollerLogArray = data["members"];
+      controllerLogArray = controllerLogArray.slice(Math.max(controllerLogArray.length - 10, 0))
+      for (i = 0; i < controllerLogArray.length; i++) {
+        if ($.inArray(controllerLogArray[i]["@id"], availableControllerLogs) == -1) {
+          console.log(i);
+          getControllerLogDetailsAndUpdateLogs(controllerLogArray[i]["@id"]);
+        }
+      }
+    },
+    error: function() {
+      toastr["error"]("Error while getting Controller logs from the central controller! Please try hitting Refresh.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+}
+
+
+function getControllerLogDetailsAndUpdateLogs(controllerLogId) {
+  // Get Controller log details from the central server,
+  // Update the logs panel in UI
+
+  $.ajax({
+    type: "GET",
+    url: centralControllerUrl + controllerLogId,
+    success: function(data) {
+      if (availableControllerLogs.length >= 20) {
+        availableControllerLogs.shift()
+      }
+      availableControllerLogs.push(controllerLogId)
+      addControllerLogToLogs(data);
+    },
+    error: function() {
+      toastr["error"]("Something wen't wrong while getting Controller log! Please try refreshing the page.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -457,6 +508,14 @@ function addDroneLogToLogs(droneLog) {
   $('<li> <a href=' + centralControllerUrl + droneLog["@id"] + '>' + droneLog["DroneID"] + " " + droneLog["LogString"] + '</a></li>').hide().prependTo("#drone-logs-list").slideDown("fast");
 
   $("#drone-logs-list li:gt(29):last").remove();
+}
+
+
+function addControllerLogToLogs(controllerLog) {
+  // Update the controller logs panel in gui
+  $('<li> <a href=' + centralControllerUrl+ droneLog["LogString"] + '>' + droneLog["DroneID"] + " " + controllerLog["@id"] + '</a></li>').hide().prependTo("#controller-logs-list").slideDown("fast");
+
+  $("#controller-logs-list li:gt(29):last").remove();
 }
 
 function addHttpApiLogToLogs(httpApiLog) {
