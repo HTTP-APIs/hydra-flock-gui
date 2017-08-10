@@ -495,12 +495,8 @@ function getControllerLogDetailsAndUpdateLogs(controllerLogId) {
 
 function addDatastreamToLogs(datastream) {
   // Update the datastream panel in gui
-  if (datastream["Temperature"] == "High" || datastream["Temperature"] == "Critical") {
-    $('<li> <a href=' + centralControllerUrl + datastream["@id"] + '>' + datastream["Temperature"] + ' temperature detected by Drone ' + datastream["DroneID"] + '</a></li>').hide().prependTo("#datastream-list").slideDown("fast");
+    $('<li> <a href=' + centralControllerUrl + datastream["@id"] + '>' + datastream["Temperature"] + '&deg;C temperature detected by Drone ' + datastream["DroneID"] + '</a></li>').hide().prependTo("#datastream-list").slideDown("fast");
     $("#datastream-list li:gt(29):last").remove();
-  } else {
-    console.log("Normal event")
-  }
 }
 
 function addDroneLogToLogs(droneLog) {
