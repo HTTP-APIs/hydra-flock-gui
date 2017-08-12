@@ -447,7 +447,7 @@ function getControllerLogsCollectionAndUpdateAvailableControllerLogs() {
     url: centralControllerUrl + "/api/ControllerLogCollection",
     success: function(data) {
       // Create temp httpApiLogArray
-      var contollerLogArray = data["members"];
+      var controllerLogArray = data["members"];
       controllerLogArray = controllerLogArray.slice(Math.max(controllerLogArray.length - 10, 0))
       for (i = 0; i < controllerLogArray.length; i++) {
         if ($.inArray(controllerLogArray[i]["@id"], availableControllerLogs) == -1) {
@@ -509,7 +509,7 @@ function addDroneLogToLogs(droneLog) {
 
 function addControllerLogToLogs(controllerLog) {
   // Update the controller logs panel in gui
-  $('<li> <a href=' + centralControllerUrl+ droneLog["LogString"] + '>' + droneLog["DroneID"] + " " + controllerLog["@id"] + '</a></li>').hide().prependTo("#controller-logs-list").slideDown("fast");
+  $('<li> <a href=' + centralControllerUrl+ controllerLog["@id"] + '>' +  controllerLog["LogString"] + " " + controllerLog["DroneID"] + '</a></li>').hide().prependTo("#controller-logs-list").slideDown("fast");
 
   $("#controller-logs-list li:gt(29):last").remove();
 }
@@ -665,6 +665,7 @@ function updateSimulation() {
   }
   getDatastreamCollectionAndUpdateAvailableDatastream();
   getDroneLogsCollectionAndUpdateAvailableDroneLogs();
+  getControllerLogsCollectionAndUpdateAvailableControllerLogs();
   setTimeout(updateSimulation, 15000);
 }
 
