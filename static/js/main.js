@@ -666,7 +666,7 @@ function updateSimulation() {
   getDatastreamCollectionAndUpdateAvailableDatastream();
   getDroneLogsCollectionAndUpdateAvailableDroneLogs();
   getControllerLogsCollectionAndUpdateAvailableControllerLogs();
-  setTimeout(updateSimulation, 15000);
+  setTimeout(updateSimulation, 17500);
 }
 
 function updateHttpApiLogs() {
