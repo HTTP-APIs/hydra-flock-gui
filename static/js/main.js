@@ -528,7 +528,7 @@ function getAnomalyDetailsAndAddMarker(anomalyId) {
 
   $.ajax({
     type: "GET",
-    url: CentralControllerUrl + anomalyId,
+    url: centralControllerUrl + anomalyId,
     success: function(data) {
       var markerLoc = data["Location"].split(",").map(Number);
       if (data["Status"] == "Positive"){
