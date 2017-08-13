@@ -666,12 +666,12 @@ function updateSimulation() {
   getDatastreamCollectionAndUpdateAvailableDatastream();
   getDroneLogsCollectionAndUpdateAvailableDroneLogs();
   getControllerLogsCollectionAndUpdateAvailableControllerLogs();
-  setTimeout(updateSimulation, 17500);
+  setTimeout(updateSimulation, 16000);
 }
 
 function updateHttpApiLogs() {
   getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs()
-  setTimeout(updateHttpApiLogs, 1000);
+  setTimeout(updateHttpApiLogs, 3000);
 }
 
 
@@ -710,5 +710,4 @@ $(document).ready(function() {
   getCentralControllerLocationAndInitialise();
   updateSimulation();
   updateHttpApiLogs();
-  getDatastreamCollectionAndUpdateAvailableDatastream()
 });
