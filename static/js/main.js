@@ -528,7 +528,7 @@ function getAnomalyDetailsAndAddMarker(anomalyId) {
 
   $.ajax({
     type: "GET",
-    url: centralControllerUrl + anomalyId,
+    url: CentralControllerUrl + anomalyId,
     success: function(data) {
       var markerLoc = data["Location"].split(",").map(Number);
       if (data["Status"] == "Positive"){
@@ -645,7 +645,7 @@ function addCentralControllerMarker(map, center) {
     lat: center[0],
     lng: center[1],
     title: 'Central Controller ' + "Lat:" + center[0] + ", Lng:" + center[1],
-    icon: "http://i.picresize.com/images/2017/07/27/1a5k.png",
+    icon: "http://i.picresize.com/images/2017/08/13/YtESh.png",
     draggable: false,
     dragend: function(event) {
       handleCentralControllerMarkerDrag(event);
