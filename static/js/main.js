@@ -206,7 +206,7 @@ function submitMessage(message) {
     type: "PUT",
     url: centralControllerUrl + centralControllerMessageCollectionPath,
     data: JSON.stringify({
-      "Message": message.toString(),
+      "MessageString": message.toString(),
       "@type": "Message"
     }),
     success: function() {
@@ -237,12 +237,12 @@ function getDroneDetailsAndUpdateMarker(drone, marker) {
         deleteDrone(drone);
       } else {
         // Extract drone position Coordinates
-        dronePosition = data["DroneState"]["Position"].split(",").map(Number);
+        dronePosition = data["State"]["Position"].split(",").map(Number);
         marker.setPosition({
           lat: dronePosition[0],
           lng: dronePosition[1]
         })
-        marker.setTitle(JSON.stringify("Drone " + data["DroneID"]) + " - " + JSON.stringify(data["DroneState"]));
+        marker.setTitle(JSON.stringify("Drone " + data["DroneID"]) + " - " + JSON.stringify(data["State"]));
         console.log("Drone marker position updated!");
 
       }
@@ -678,8 +678,8 @@ function handleCentralControllerMarkerDrag(event) {
 
 
 function checkDrone(drone) {
-  // Check if the drone object has a "DroneState object".
-  if ("DroneState" in drone) {
+  // Check if the drone object has a "State object".
+  if ("State" in drone) {
     return true;
   } else {
     return false;
