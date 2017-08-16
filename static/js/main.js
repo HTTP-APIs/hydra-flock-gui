@@ -32,6 +32,8 @@ var availableDatastream = [];
 var availableDroneLogs = [];
 var availableHttpApiLogs = [];
 var availableControllerLogs = [];
+var unconfirmedAnomalyMarkers = [];
+var positiveAnomalyMarkers = [];
 
 
 // Distance conversion related functions
@@ -204,7 +206,7 @@ function submitMessage(message) {
     type: "PUT",
     url: centralControllerUrl + centralControllerMessageCollectionPath,
     data: JSON.stringify({
-      "Message": message.toString(),
+      "MessageString": message.toString(),
       "@type": "Message"
     }),
     success: function() {
@@ -222,7 +224,7 @@ function submitMessage(message) {
 
 
 function getDroneDetailsAndUpdateMarker(drone, marker) {
-  // Get drone details from the central server, if drone is not valid delete that drone from the central server.
+  // Get drone details from the central Controller, if drone is not valid delete that drone from the central Controller.
   // Update the drone marker in map UI
 
   $.ajax({
@@ -235,18 +237,18 @@ function getDroneDetailsAndUpdateMarker(drone, marker) {
         deleteDrone(drone);
       } else {
         // Extract drone position Coordinates
-        dronePosition = data["DroneState"]["Position"].split(",").map(Number);
+        dronePosition = data["State"]["Position"].split(",").map(Number);
         marker.setPosition({
           lat: dronePosition[0],
           lng: dronePosition[1]
         })
-        marker.setTitle(JSON.stringify("Drone " + data["DroneID"]) + " - " + JSON.stringify(data["DroneState"]));
+        marker.setTitle(JSON.stringify("Drone " + data["DroneID"]) + " - " + JSON.stringify(data["State"]));
         console.log("Drone marker position updated!");
 
       }
     },
     error: function() {
-      toastr["error"]("Something wen't wrong while getting drone details! Please try refreshing the page.");
+      toastr["error"]("Something went wrong while getting drone details! Please try refreshing the page.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -272,6 +274,7 @@ function getActiveDronesAndGenerateMarkers() {
         marker = map.createMarker({
           lat: center[0],
           lng: center[1],
+          icon: "http://i.picresize.com/images/2017/08/13/s5JB7.png",
         })
         map.addMarker(marker);
         droneMarkers.push(marker);
@@ -282,7 +285,7 @@ function getActiveDronesAndGenerateMarkers() {
       toastr["success"]("Active drones list successfully updated!");
     },
     error: function() {
-      toastr["error"]("Something wen't wrong while getting active drones list from the central controller! Please try hitting Refresh.");
+      toastr["error"]("Something went wrong while getting active drones list from the central controller! Please try hitting Refresh.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -308,7 +311,7 @@ function getDatastreamCollectionAndUpdateAvailableDatastream() {
       }
     },
     error: function() {
-      toastr["error"]("Something wen't wrong while getting Datastream collection from the central controller! Please try hitting Refresh.");
+      toastr["error"]("Something went wrong while getting Datastream collection from the central controller! Please try hitting Refresh.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -318,7 +321,7 @@ function getDatastreamCollectionAndUpdateAvailableDatastream() {
 
 
 function getDatastreamDetailsAndUpdateLogs(datastreamId) {
-  // Get datastream details from the central server,
+  // Get datastream details from the central Controller,
   // Update the logs panel in UI
 
   $.ajax({
@@ -332,7 +335,7 @@ function getDatastreamDetailsAndUpdateLogs(datastreamId) {
       addDatastreamToLogs(data);
     },
     error: function() {
-      toastr["error"]("Something wen't wrong while getting Datastream details! Please try refreshing the page.");
+      toastr["error"]("Something went wrong while getting Datastream details! Please try refreshing the page.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -368,7 +371,7 @@ function getDroneLogsCollectionAndUpdateAvailableDroneLogs() {
 
 
 function getDroneLogDetailsAndUpdateLogs(droneLogId) {
-  // Get Drone Log details from the central server,
+  // Get Drone Log details from the central Controller,
   // Update the logs panel in UI
 
   $.ajax({
@@ -382,7 +385,7 @@ function getDroneLogDetailsAndUpdateLogs(droneLogId) {
       addDroneLogToLogs(data);
     },
     error: function() {
-      toastr["error"]("Something wen't wrong while getting Drone log! Please try refreshing the page.");
+      toastr["error"]("Something went wrong while getting Drone log! Please try refreshing the page.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -417,7 +420,7 @@ function getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs() {
 
 
 function getHttpApiLogDetailsAndUpdateLogs(httpApiLogId) {
-  // Get Http Api log details from the central server,
+  // Get Http Api log details from the central Controller,
   // Update the logs panel in UI
 
   $.ajax({
@@ -431,7 +434,7 @@ function getHttpApiLogDetailsAndUpdateLogs(httpApiLogId) {
       addHttpApiLogToLogs(data);
     },
     error: function() {
-      toastr["error"]("Something wen't wrong while getting Http Api log! Please try refreshing the page.");
+      toastr["error"]("Something went wrong while getting Http Api log! Please try refreshing the page.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -447,7 +450,7 @@ function getControllerLogsCollectionAndUpdateAvailableControllerLogs() {
     url: centralControllerUrl + "/api/ControllerLogCollection",
     success: function(data) {
       // Create temp httpApiLogArray
-      var contollerLogArray = data["members"];
+      var controllerLogArray = data["members"];
       controllerLogArray = controllerLogArray.slice(Math.max(controllerLogArray.length - 10, 0))
       for (i = 0; i < controllerLogArray.length; i++) {
         if ($.inArray(controllerLogArray[i]["@id"], availableControllerLogs) == -1) {
@@ -467,7 +470,7 @@ function getControllerLogsCollectionAndUpdateAvailableControllerLogs() {
 
 
 function getControllerLogDetailsAndUpdateLogs(controllerLogId) {
-  // Get Controller log details from the central server,
+  // Get Controller log details from the central Controller,
   // Update the logs panel in UI
 
   $.ajax({
@@ -481,7 +484,78 @@ function getControllerLogDetailsAndUpdateLogs(controllerLogId) {
       addControllerLogToLogs(data);
     },
     error: function() {
-      toastr["error"]("Something wen't wrong while getting Controller log! Please try refreshing the page.");
+      toastr["error"]("Something went wrong while getting Controller log! Please try refreshing the page.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+}
+
+
+function getAnomalyCollectionAndUpdateUi() {
+  // Get anomaly list from the central controller.
+  $.ajax({
+    type: "GET",
+    url: centralControllerUrl + "/api/AnomalyCollection",
+    success: function(data) {
+      // Create temp datastreamArray
+      var anomalyArray = data["members"];
+
+      clearMarkers(unconfirmedAnomalyMarkers);
+      clearMarkers(positiveAnomalyMarkers);
+
+      unconfirmedAnomalyMarkers = [];
+      positiveAnomalyMarkers = [];
+
+      for (i = 0; i < anomalyArray.length; i++) {
+          getAnomalyDetailsAndAddMarker(anomalyArray[i]["@id"]);
+      }
+    },
+    error: function() {
+      toastr["error"]("Something went wrong while getting Anomaly collection from the central controller! Please try hitting Refresh.");
+    },
+    dataType: 'json',
+    crossDomain: true,
+    contentType: "application/ld+json",
+  });
+}
+
+
+function getAnomalyDetailsAndAddMarker(anomalyId) {
+  // Get anomaly details from the central Controller,
+  // Update anomaly markers in UI
+
+  $.ajax({
+    type: "GET",
+    url: centralControllerUrl + anomalyId,
+    success: function(data) {
+      var markerLoc = data["Location"].split(",").map(Number);
+      if (data["Status"] == "Positive"){
+        var positiveAnomalyMarker = map.createMarker({
+          lat: markerLoc[0],
+          lng: markerLoc[1],
+          title: 'Positive Anomaly ' + "Lat:" + markerLoc[0] + ", Lng:" + markerLoc[1],
+          icon: "http://i.picresize.com/images/2017/08/13/mvebt.png",
+        })
+
+        map.addMarker(positiveAnomalyMarker);
+        positiveAnomalyMarkers.push(positiveAnomalyMarker);
+      }
+      else if (data["Status"] == "Confirming"){
+        var confirmingAnomalyMarker = map.createMarker({
+          lat: markerLoc[0],
+          lng: markerLoc[1],
+          title: 'Unconfirmed Anomaly ' + "Lat:" + markerLoc[0] + ", Lng:" + markerLoc[1],
+          icon: "http://i.picresize.com/images/2017/08/13/1L6FP.png",
+        })
+
+        map.addMarker(confirmingAnomalyMarker);
+        unconfirmedAnomalyMarkers.push(confirmingAnomalyMarker);
+      }
+    },
+    error: function() {
+      toastr["error"]("Something went wrong while getting Anomaly details! Please try refreshing the page.");
     },
     dataType: 'json',
     crossDomain: true,
@@ -509,7 +583,7 @@ function addDroneLogToLogs(droneLog) {
 
 function addControllerLogToLogs(controllerLog) {
   // Update the controller logs panel in gui
-  $('<li> <a href=' + centralControllerUrl+ droneLog["LogString"] + '>' + droneLog["DroneID"] + " " + controllerLog["@id"] + '</a></li>').hide().prependTo("#controller-logs-list").slideDown("fast");
+  $('<li> <a href=' + centralControllerUrl+ controllerLog["@id"] + '>' +  controllerLog["LogString"] + " " + controllerLog["DroneID"] + '</a></li>').hide().prependTo("#controller-logs-list").slideDown("fast");
 
   $("#controller-logs-list li:gt(29):last").remove();
 }
@@ -545,6 +619,13 @@ function addMarkers(map, coordinates, icon) {
   }
 }
 
+function clearMarkers(markers){
+  // Clear a set of markers from map
+  for (i=0; i < markers.length; i++){
+    markers[i].setMap(null);
+  }
+}
+
 
 function drawPolygonForPath(map, path) {
   // Draw a polygon on the map
@@ -563,9 +644,9 @@ function addCentralControllerMarker(map, center) {
   map.addMarker({
     lat: center[0],
     lng: center[1],
-    title: 'Central Server ' + "Lat:" + center[0] + ", Lng:" + center[1],
-    icon: "http://i.picresize.com/images/2017/07/27/1a5k.png",
-    draggable: true,
+    title: 'Central Controller ' + "Lat:" + center[0] + ", Lng:" + center[1],
+    icon: "http://i.picresize.com/images/2017/08/13/YtESh.png",
+    draggable: false,
     dragend: function(event) {
       handleCentralControllerMarkerDrag(event);
     }
@@ -597,8 +678,8 @@ function handleCentralControllerMarkerDrag(event) {
 
 
 function checkDrone(drone) {
-  // Check if the drone object has a "DroneState object".
-  if ("DroneState" in drone) {
+  // Check if the drone object has a "State object".
+  if ("State" in drone) {
     return true;
   } else {
     return false;
@@ -663,14 +744,18 @@ function updateSimulation() {
       getDroneDetailsAndUpdateMarker(activeDrones[i], droneMarkers[i]);
     }
   }
+
+  getAnomalyCollectionAndUpdateUi();
   getDatastreamCollectionAndUpdateAvailableDatastream();
   getDroneLogsCollectionAndUpdateAvailableDroneLogs();
-  setTimeout(updateSimulation, 15000);
+  getControllerLogsCollectionAndUpdateAvailableControllerLogs();
+
+  setTimeout(updateSimulation, 16000);
 }
 
 function updateHttpApiLogs() {
   getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs()
-  setTimeout(updateHttpApiLogs, 1000);
+  setTimeout(updateHttpApiLogs, 8000);
 }
 
 
@@ -709,5 +794,4 @@ $(document).ready(function() {
   getCentralControllerLocationAndInitialise();
   updateSimulation();
   updateHttpApiLogs();
-  getDatastreamCollectionAndUpdateAvailableDatastream()
 });
