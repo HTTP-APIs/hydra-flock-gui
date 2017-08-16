@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from gevent.wsgi import WSGIServer
 
 app = Flask(__name__)
 
@@ -9,4 +10,5 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    http_server = WSGIServer(('', 5000), app)
+    http_server.serve_forever()
