@@ -36,6 +36,7 @@ var unconfirmedAnomalyMarkers = [];
 var positiveAnomalyMarkers = [];
 
 
+
 // Distance conversion related functions
 
 function changeInLatitude(distance) {
@@ -118,51 +119,26 @@ function genSquarePath(controllerCoordinates, areaOfInterestSquareDimension) {
 
 
 
-
 //Data fetching related functions.
 
-function getCentralControllerLocationAndInitialise() {
+function getCentralControllerLocationAndInitialize() {
   // Get coordinates of the central controller and then inintialize the gui.
 
   $.ajax({
     type: "GET",
     url: centralControllerUrl + centralControllerLocationPath,
     success: function(data) {
-      // console.log("coordinates", data["Location"].split(",").map(Number))
 
       toastr["success"]("Central Controller Coordinates retrieved successfully!");
       // Convert fetched location to data to array of coordinates [Lat, Lng]
       center = data["Location"].split(",").map(Number);
-      // Initialise the Map UI with center as center point.
-      initialiseGui(center);
+      // Initialize the Map UI with center as center point.
+      initializeGui(center);
     },
     error: function() {
       toastr["error"]("Error getting Central Controller Coordinates! Using default Coordinates.");
       center = [0, 0];
-      initialiseGui(center);
-    },
-    dataType: 'json',
-    crossDomain: true,
-    contentType: "application/ld+json",
-  });
-}
-
-
-function udpateCentralControllerLocation(location) {
-  // Upate the coordinates of central controller using AJAX post request
-
-  $.ajax({
-    type: "POST",
-    url: centralControllerUrl + centralControllerLocationPath,
-    data: JSON.stringify({
-      "Location": location.toString(),
-      "@type": "Location"
-    }),
-    success: function() {
-      toastr["success"]("Central Controller location successfully updated! New coordinates are " + location);
-    },
-    error: function() {
-      toastr["error"]("Something went wrong while updating the central controller location!");
+      initializeGui(center);
     },
     dataType: 'json',
     crossDomain: true,
@@ -232,7 +208,7 @@ function getDroneDetailsAndUpdateMarker(drone, marker) {
     url: centralControllerUrl + drone["@id"],
     success: function(data) {
       // Check if drone is faulty
-      if (!checkDrone(data)) {
+      if (!isDroneValid(data)) {
         // console.log(data);
         deleteDrone(drone);
       } else {
@@ -255,6 +231,7 @@ function getDroneDetailsAndUpdateMarker(drone, marker) {
     contentType: "application/ld+json",
   });
 }
+
 
 function getActiveDronesAndGenerateMarkers() {
   // Get active drone list from the central controller.
@@ -392,6 +369,7 @@ function getDroneLogDetailsAndUpdateLogs(droneLogId) {
     contentType: "application/ld+json",
   });
 }
+
 
 function getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs() {
   // Get Http Api Logs list from the central controller.
@@ -588,11 +566,13 @@ function addControllerLogToLogs(controllerLog) {
   $("#controller-logs-list li:gt(29):last").remove();
 }
 
+
 function addHttpApiLogToLogs(httpApiLog) {
   // Update the drone logs panel in gui
   $('<li> <a href=' + centralControllerUrl + httpApiLog["@id"] + '>' + httpApiLog["Subject"] + " " + httpApiLog["Predicate"] + " at " + httpApiLog["Object"] + '</a></li>').hide().prependTo('#http-api-logs-list').slideDown("fast");
   $("#http-api-logs-list li:gt(29):last").remove();
 }
+
 
 function updateDronesPanel(dronesList) {
   // Update the drones panel in gui
@@ -619,6 +599,7 @@ function addMarkers(map, coordinates, icon) {
   }
 }
 
+
 function clearMarkers(markers){
   // Clear a set of markers from map
   for (i=0; i < markers.length; i++){
@@ -639,6 +620,7 @@ function drawPolygonForPath(map, path) {
   });
 }
 
+
 function addCentralControllerMarker(map, center) {
   // Add central controller to the map
   map.addMarker({
@@ -646,38 +628,11 @@ function addCentralControllerMarker(map, center) {
     lng: center[1],
     title: 'Central Controller ' + "Lat:" + center[0] + ", Lng:" + center[1],
     icon: "http://i.picresize.com/images/2017/08/13/YtESh.png",
-    draggable: false,
-    dragend: function(event) {
-      handleCentralControllerMarkerDrag(event);
-    }
   });
 }
 
-function handleCentralControllerMarkerDrag(event) {
-  // Handle the controller marker dragging event.
-  var lat = event.latLng.lat();
-  var lng = event.latLng.lng();
-  var newCentralControllerLocation = [lat, lng];
-  // remove all previous polygons and markers.
-  map.removePolygons();
-  map.removeMarkers();
 
-  // Update the controller location
-  udpateCentralControllerLocation(newCentralControllerLocation);
-  // Generate new square path
-  var path = genSquarePath(newCentralControllerLocation, 10);
-  // Add four invisible markers for area of interest coordinates
-  addMarkers(map, path, "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/3by2white.svg/150px-3by2white.svg.png");
-  //Draw new polygon on map
-  drawPolygonForPath(map, path);
-  // Add updated central controller marker
-  addCentralControllerMarker(map, newCentralControllerLocation);
-  // Update the active drones list and generate new markers
-  getActiveDronesAndGenerateMarkers();
-}
-
-
-function checkDrone(drone) {
+function isDroneValid(drone) {
   // Check if the drone object has a "State object".
   if ("State" in drone) {
     return true;
@@ -687,23 +642,8 @@ function checkDrone(drone) {
 }
 
 
-function getTile(coord, zoom, ownerDocument) {
-  // Grid overlay tile function from gmaps.js
-  var div = ownerDocument.createElement('div');
-  div.innerHTML = coord;
-  div.style.width = this.tileSize.width + 'px';
-  div.style.height = this.tileSize.height + 'px';
-  div.style.fontSize = '10';
-  div.style.fontWeight = 'bolder';
-  div.style.border = 'dotted 1px #aaa';
-  div.style.textAlign = 'center';
-  div.style.lineHeight = this.tileSize.height + 'px';
-  return div;
-};
-
-
-function initialiseMap(center) {
-  // Initialise map with central controller as center point.
+function initializeMap(center) {
+  // Initialize map with central controller as center point.
   map = new GMaps({
     el: '#map',
     lat: center[0],
@@ -714,10 +654,10 @@ function initialiseMap(center) {
 }
 
 
-function initialiseGui(center) {
-  // Initialise the Simulation Map GUI
+function initializeGui(center) {
+  // Initialize the Simulation Map GUI
 
-  map = initialiseMap(center);
+  map = initializeMap(center);
   // Generate area of interest polygon path and add markers.
   path = genSquarePath(center, 10);
   addMarkers(map, path, "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/3by2white.svg/150px-3by2white.svg.png");
@@ -727,17 +667,15 @@ function initialiseGui(center) {
   addCentralControllerMarker(map, center);
   // Set map zoom level to 12
   map.setZoom(12);
-  // Add Grid overlay to mamp
-  // map.addOverlayMapType({
-  //   index: 0,
-  //   tileSize: new google.maps.Size(128,128),
-  //   getTile: getTile
-  // });
+
   //update the active drones list and generate drone markers
   getActiveDronesAndGenerateMarkers();
 }
 
+
+
 //Update the simulation UI every couple of seconds (Drone markers)
+
 function updateSimulation() {
   if (activeDrones.length > 0) {
     for (i = 0; i < activeDrones.length; i++) {
@@ -753,6 +691,7 @@ function updateSimulation() {
   setTimeout(updateSimulation, 16000);
 }
 
+
 function updateHttpApiLogs() {
   getHttpApiLogsCollectionAndUpdateAvailableHttpAPiLogs()
   setTimeout(updateHttpApiLogs, 8000);
@@ -760,8 +699,7 @@ function updateHttpApiLogs() {
 
 
 
-
-// Bindings to different elements
+// Bindings to different html elements
 
 //Message form bindings
 $("#message-submit-btn").click(function() {
@@ -771,6 +709,7 @@ $("#message-submit-btn").click(function() {
     $("#message").val("");
   }
 });
+
 
 $("#message-form").keypress(function(e) {
   if (e.which == 13) {
@@ -782,16 +721,16 @@ $("#message-form").keypress(function(e) {
   }
 });
 
+
 // Drone list refresh button binding
 $("#refresh-drone-list").click(function() {
   getActiveDronesAndGenerateMarkers();
 });
 
 
-
 $(document).ready(function() {
   // Initialize everything
-  getCentralControllerLocationAndInitialise();
+  getCentralControllerLocationAndInitialize();
   updateSimulation();
   updateHttpApiLogs();
 });
