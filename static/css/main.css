@@ -80,3 +80,15 @@ footer {
   overflow-y: scroll;
   overflow-x: hidden;
 }
+
+#play-btn {
+  position: fixed;
+  right: 8px;
+  top:8px;
+}
+
+#pause-btn {
+  position: fixed;
+  right: 8px;
+  top:8px;
+}

@@ -548,14 +548,14 @@ function getAnomalyDetailsAndAddMarker(anomalyId) {
 function addDatastreamToLogs(datastream) {
   // Update the datastream panel in gui
     $('<li> <a href=' + centralControllerUrl + datastream["@id"] + '>' + datastream["Temperature"] + '&deg;C temperature detected by Drone ' + datastream["DroneID"] + '</a></li>').hide().prependTo("#datastream-list").slideDown("fast");
-    $("#datastream-list li:gt(29):last").remove();
+    $("#datastream-list li:gt(50):last").remove();
 }
 
 function addDroneLogToLogs(droneLog) {
   // Update the drone logs panel in gui
   $('<li> <a href=' + centralControllerUrl + droneLog["@id"] + '>' + droneLog["DroneID"] + " " + droneLog["LogString"] + '</a></li>').hide().prependTo("#drone-logs-list").slideDown("fast");
 
-  $("#drone-logs-list li:gt(29):last").remove();
+  $("#drone-logs-list li:gt(50):last").remove();
 }
 
 
@@ -563,14 +563,14 @@ function addControllerLogToLogs(controllerLog) {
   // Update the controller logs panel in gui
   $('<li> <a href=' + centralControllerUrl+ controllerLog["@id"] + '>' +  controllerLog["LogString"] + " " + controllerLog["DroneID"] + '</a></li>').hide().prependTo("#controller-logs-list").slideDown("fast");
 
-  $("#controller-logs-list li:gt(29):last").remove();
+  $("#controller-logs-list li:gt(50):last").remove();
 }
 
 
 function addHttpApiLogToLogs(httpApiLog) {
   // Update the drone logs panel in gui
   $('<li> <a href=' + centralControllerUrl + httpApiLog["@id"] + '>' + httpApiLog["Subject"] + " " + httpApiLog["Predicate"] + " at " + httpApiLog["Object"] + '</a></li>').hide().prependTo('#http-api-logs-list').slideDown("fast");
-  $("#http-api-logs-list li:gt(29):last").remove();
+  $("#http-api-logs-list li:gt(50):last").remove();
 }
 
 
@@ -640,6 +640,29 @@ function isDroneValid(drone) {
     return false;
   }
 }
+
+// Generate messages for playing and pausing the simulation
+function genPauseMessages(){
+  var messages = [];
+  for (i = 0; i < activeDrones.length; i++) {
+    //Get drone id
+    var droneId = activeDrones[i]["@id"].match(/([^\/]*)\/*$/)[1];
+    messages.push("Set Drone "+ droneId + " Status Off");
+  }
+  return messages;
+}
+
+
+function genPlayMessages(){
+  var messages = [];
+  for (i = 0; i < activeDrones.length; i++) {
+    //Get drone id
+    var droneId = activeDrones[i]["@id"].match(/([^\/]*)\/*$/)[1];
+    messages.push("Set Drone "+ droneId + " Status Active");
+  }
+  return messages;
+}
+
 
 
 function initializeMap(center) {
@@ -720,6 +743,44 @@ $("#message-form").keypress(function(e) {
     }
   }
 });
+
+
+// Play simulation
+$("#play-btn").click(function(){
+  toastr["info"]("Playing Simulation");
+
+  var messages = genPlayMessages();
+  for (i=0; i< messages.length; i++){
+    submitMessage(messages[i]);
+  }
+
+  $(this).attr("disabled", true);
+    setTimeout(function() {
+      $("#play-btn").addClass("hidden");
+      $("#pause-btn").attr("disabled", false);
+      $("#pause-btn").removeClass("hidden");
+
+    }, 30000);
+})
+
+
+//Pause simulation
+$("#pause-btn").click(function(){
+  toastr["info"]("Pausing Simulation");
+
+  var messages = genPauseMessages();
+  for (i=0; i< messages.length; i++){
+    submitMessage(messages[i]);
+  }
+
+  $(this).attr("disabled", true);
+  setTimeout(function() {
+    $("#pause-btn").addClass("hidden");
+    $("#play-btn").attr("disabled", false);
+    $("#play-btn").removeClass("hidden");
+  }, 30000);
+})
+
 
 
 // Drone list refresh button binding
