@@ -251,7 +251,7 @@ function getActiveDronesAndGenerateMarkers() {
         marker = map.createMarker({
           lat: center[0],
           lng: center[1],
-          icon: "http://i.picresize.com/images/2017/08/13/s5JB7.png",
+          icon: "https://raw.githubusercontent.com/xadahiya/flock-demo-images/master/rsz_1rsz_2016012007111739274.png",
         })
         map.addMarker(marker);
         droneMarkers.push(marker);
@@ -514,7 +514,7 @@ function getAnomalyDetailsAndAddMarker(anomalyId) {
           lat: markerLoc[0],
           lng: markerLoc[1],
           title: 'Positive Anomaly ' + "Lat:" + markerLoc[0] + ", Lng:" + markerLoc[1],
-          icon: "http://i.picresize.com/images/2017/08/13/mvebt.png",
+          icon: "https://raw.githubusercontent.com/xadahiya/flock-demo-images/master/rsz_map-marker-icon.png",
         })
 
         map.addMarker(positiveAnomalyMarker);
@@ -525,7 +525,7 @@ function getAnomalyDetailsAndAddMarker(anomalyId) {
           lat: markerLoc[0],
           lng: markerLoc[1],
           title: 'Unconfirmed Anomaly ' + "Lat:" + markerLoc[0] + ", Lng:" + markerLoc[1],
-          icon: "http://i.picresize.com/images/2017/08/13/1L6FP.png",
+          icon: "https://raw.githubusercontent.com/xadahiya/flock-demo-images/master/rsz_256-256-a5485b563efc4511e0cd8bd04ad0fe9e.png",
         })
 
         map.addMarker(confirmingAnomalyMarker);
@@ -627,7 +627,7 @@ function addCentralControllerMarker(map, center) {
     lat: center[0],
     lng: center[1],
     title: 'Central Controller ' + "Lat:" + center[0] + ", Lng:" + center[1],
-    icon: "http://i.picresize.com/images/2017/08/13/YtESh.png",
+    icon: "https://raw.githubusercontent.com/xadahiya/flock-demo-images/master/rsz_1308001441853739087googlepct20mapspct20pinsvghi.png",
   });
 }
 
