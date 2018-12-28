@@ -92,3 +92,9 @@ footer {
   right: 8px;
   top:8px;
 }
+
+button#edit-vocab-btn {
+  position: fixed;
+  left: 8px;
+  top: 8px;
+}
